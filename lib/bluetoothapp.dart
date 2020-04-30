@@ -19,6 +19,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
   bool _connected = false;
   bool _pressed = false;
 
+  bool isSwitched = true;
   @override
   void initState() {
     super.initState();
@@ -72,22 +73,39 @@ class _BluetoothAppState extends State<BluetoothApp> {
     });
   }
 
-    // Create the List of devices to be shown in Dropdown Menu
+  List<String> _listDeviceName = [];
+  // Create the List of devices to be shown in Dropdown Menu
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
     List<DropdownMenuItem<BluetoothDevice>> items = [];
     if (_devicesList.isEmpty) {
       items.add(DropdownMenuItem(
         child: Text('NO DEVICE'),
       ));
+      _listDeviceName.add('NO DEVICE');
     } else {
       _devicesList.forEach((device) {
         items.add(DropdownMenuItem(
           child: Text(device.name),
           value: device,
         ));
+        _listDeviceName.add(device.name.toString());
       });
     }
     return items;
+  }
+
+  String _deviceName = "No Device";
+  checkDeviceNameList(dynamic selectedDevice) {
+    String deviceName;
+    if (selectedDevice.runtimeType == BluetoothDevice) {
+      deviceName = selectedDevice.name;
+    } else {
+      deviceName = "No Device";
+    }
+
+    setState(() {
+      _deviceName = deviceName;
+    });
   }
 
   // Method to connect to bluetooth
@@ -114,7 +132,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
     bluetooth.disconnect();
     setState(() => _pressed = true);
   }
-  
+
   // Method to show a Snackbar,
   // taking message as the text
   Future show(
@@ -132,8 +150,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
     );
   }
 
-
-    // Method to send message,
+  // Method to send message,
   // for turning the bletooth device on
   void _sendOnMessageToBluetooth() {
     bluetooth.isConnected.then((isConnected) {
@@ -155,14 +172,14 @@ class _BluetoothAppState extends State<BluetoothApp> {
     });
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text("Flutter Bluetooth"),
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: Colors.blueAccent,
         ),
         body: Container(
           // Defining a Column containing FOUR main Widgets wrapped with some padding:
@@ -176,13 +193,13 @@ class _BluetoothAppState extends State<BluetoothApp> {
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  "PAIRED DEVICES",
+                  "Select Device to Pair",
                   style: TextStyle(fontSize: 24, color: Colors.blue),
                   textAlign: TextAlign.center,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(16.0),
                 // Defining a Row containing THREE main Widgets:
                 // 1. Text
                 // 2. DropdownButton
@@ -191,7 +208,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Text(
-                      'Device:',
+                      'Devices in range:',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
@@ -199,13 +216,16 @@ class _BluetoothAppState extends State<BluetoothApp> {
                     DropdownButton(
                       // To be implemented : _getDeviceItems()
                       items: _getDeviceItems(),
-                      onChanged: (value) => setState(() => _device = value),
+                      onChanged: (value) {
+                        checkDeviceNameList(value);
+                        setState(() => _device = value);
+                      },
                       value: _device,
                     ),
                     RaisedButton(
                       onPressed:
                           // To be implemented : _disconnect and _connect
-                          _pressed ? null : _connected ? _disconnect : _connect, 
+                          _pressed ? null : _connected ? _disconnect : _connect,
                       child: Text(_connected ? 'Disconnect' : 'Connect'),
                     ),
                   ],
@@ -221,30 +241,63 @@ class _BluetoothAppState extends State<BluetoothApp> {
                     // 1. Text (wrapped with "Expanded")
                     // 2. FlatButton
                     // 3. FlatButton
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            "DEVICE 1",
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.green,
-                            ),
+                    child: Container(
+                      child: Column(
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  _deviceName,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                              FlatButton(
+                                onPressed:
+                                    // To be implemented : _sendOnMessageToBluetooth()
+                                    _connected
+                                        ? _sendOnMessageToBluetooth
+                                        : null,
+                                child: Text("ON"),
+                              ),
+                              FlatButton(
+                                onPressed:
+                                    // To be implemented : _sendOffMessageToBluetooth()
+                                    _connected
+                                        ? _sendOffMessageToBluetooth
+                                        : null,
+                                child: Text("OFF"),
+                              ),
+                            ],
                           ),
-                        ),
-                        FlatButton(
-                          onPressed:
-                              // To be implemented : _sendOnMessageToBluetooth()
-                              _connected ? _sendOnMessageToBluetooth : null,
-                          child: Text("ON"),
-                        ),
-                        FlatButton(
-                          onPressed:
-                              // To be implemented : _sendOffMessageToBluetooth()
-                              _connected ? _sendOffMessageToBluetooth : null,
-                          child: Text("OFF"),
-                        ),
-                      ],
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  "Record Data",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              Switch(
+                                value: isSwitched,
+                                onChanged: (value) {
+                                  setState(() {
+                                    isSwitched = value;
+                                  });
+                                },
+                                activeTrackColor: Colors.lightGreenAccent,
+                                activeColor: Colors.green,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -270,5 +323,5 @@ class _BluetoothAppState extends State<BluetoothApp> {
         ),
       ),
     );
-    }
+  }
 }
