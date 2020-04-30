@@ -77,7 +77,7 @@ class _BluetoothAppState extends State<BluetoothApp> {
     List<DropdownMenuItem<BluetoothDevice>> items = [];
     if (_devicesList.isEmpty) {
       items.add(DropdownMenuItem(
-        child: Text('NONE'),
+        child: Text('NO DEVICE'),
       ));
     } else {
       _devicesList.forEach((device) {
